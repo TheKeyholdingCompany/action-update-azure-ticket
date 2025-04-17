@@ -9,7 +9,7 @@ RUN cd /temp/prod && bun install --frozen-lockfile --production
 # copy production dependencies and source code into final image
 FROM base AS release
 COPY --from=install /temp/prod/node_modules /app/
-COPY --from=prerelease /temp/prod/package.json /app/
+COPY --from=install /temp/prod/package.json /app/
 COPY index.ts /app/
 
 # run the app
