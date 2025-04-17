@@ -13,20 +13,17 @@ const changeTicketStatus = async (
   status: string | undefined
 ) => {
   if (!itemId) {
-    console.error("No item ID provided");
-    return;
+    throw new Error("Item ID is required");
   }
   const formattedStatus = WORK_ITEM_STATUS_ORDER.find(
     (s) => s.toUpperCase() === `${status}`.toUpperCase()
   );
   if (!formattedStatus) {
-    console.error("Invalid status provided");
-    return;
+    throw new Error("Invalid status provided");
   }
   const ticketInfo = await fetchTicket(itemId);
   if (!ticketInfo) {
-    console.error("Ticket not found");
-    return;
+    throw new Error("Ticket not found");
   }
   const currentStatus = ticketInfo.fields["System.State"];
   if (currentStatus === formattedStatus) {
@@ -37,7 +34,7 @@ const changeTicketStatus = async (
   const statusIndex = WORK_ITEM_STATUS_ORDER.indexOf(formattedStatus);
   const currentStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(currentStatus);
   if (statusIndex < currentStatusIndex) {
-    console.error("Cannot change to a previous status");
+    throw new Error("Cannot change to a previous status");
     return;
   }
   for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
@@ -56,7 +53,7 @@ const updateTicketStatus = async (itemId: string, status: string) => {
     payload
   );
   if (result.status !== 200) {
-    console.error(
+    throw new Error(
       `Error updating ticket ${itemId} status to ${status}: ${result.data?.message}`
     );
   }
