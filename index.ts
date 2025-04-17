@@ -34,9 +34,9 @@ const changeTicketStatus = async (
   const statusIndex = WORK_ITEM_STATUS_ORDER.indexOf(formattedStatus);
   const currentStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(currentStatus);
   if (statusIndex < currentStatusIndex) {
-    throw new Error("Cannot change to a previous status");
-    return;
+    console.error("Cannot change to a previous status");
   }
+  
   for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
     const nextStatus = WORK_ITEM_STATUS_ORDER[i];
     if (nextStatus) {
