@@ -25,7 +25,7 @@ on:
     branches:
       - main
   push:
-    branch-ignore:
+    branches-ignore:
       - main
 
 jobs:
