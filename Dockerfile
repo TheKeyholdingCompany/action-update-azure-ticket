@@ -13,5 +13,4 @@ COPY --from=install /temp/prod/package.json /app/
 COPY index.ts /app/
 
 # run the app
-USER bun
 ENTRYPOINT [ "bun", "run", "/app/index.ts" ]
