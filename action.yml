@@ -29,3 +29,4 @@ runs:
     - ${{ inputs.project }}
     - ${{ inputs.ticket-id}}
     - ${{ inputs.status }}
+    - ${{ inputs.status-order-list }}
