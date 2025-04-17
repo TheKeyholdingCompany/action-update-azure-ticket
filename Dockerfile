@@ -14,4 +14,4 @@ COPY index.ts /app/
 
 # run the app
 USER bun
-ENTRYPOINT [ "bun", "run", "index.ts" ]
+ENTRYPOINT [ "bun", "run", "/app/index.ts" ]
