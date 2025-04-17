@@ -1,0 +1,31 @@
+name: Update Azure Boards Ticket Status
+description: Update an Azure Boards ticket status
+branding:
+  icon: columns
+  color: blue
+inputs:
+  pat:
+    description: Personal Access Token for Azure Boards
+    required: true
+  project:
+    description: Project name or ID (if you have multiple projects, any would work if you have access to all of them)
+    required: true
+  ticket-id:
+    description: Ticket ID to update
+    required: true
+  status:
+    description: Status to set the ticket to
+    required: true
+  status-order-list:
+    description: Ordered list of status (in case the ticket needs to be moved to an intermediate status before moving to the final status)
+    required: false
+    default: New,In Progress,Code Review,Ready for QA,In QA,Ready for regression,Ready for Deploy,Done
+    
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ inputs.pat }}
+    - ${{ inputs.project }}
+    - ${{ inputs.ticket-id}}
+    - ${{ inputs.status }}

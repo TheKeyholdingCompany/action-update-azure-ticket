@@ -1,0 +1,97 @@
+import { argv } from "node:process";
+import axios from "axios";
+
+const PAT_TOKEN = argv[2];
+const PROJECT = argv[3];
+const WORK_ITEM_ID = argv[4];
+const WORK_ITEM_INTENDED_STATUS = argv[5];
+const WORK_ITEM_STATUS_ORDER =
+  argv[6]?.split(",").map((e) => `${e}`.trim()) || [];
+
+const changeTicketStatus = async (
+  itemId: string | undefined,
+  status: string | undefined
+) => {
+  if (!itemId) {
+    console.error("No item ID provided");
+    return;
+  }
+  const formattedStatus = WORK_ITEM_STATUS_ORDER.find(
+    (s) => s.toUpperCase() === `${status}`.toUpperCase()
+  );
+  if (!formattedStatus) {
+    console.error("Invalid status provided");
+    return;
+  }
+  const ticketInfo = await fetchTicket(itemId);
+  if (!ticketInfo) {
+    console.error("Ticket not found");
+    return;
+  }
+  const currentStatus = ticketInfo.fields["System.State"];
+  if (currentStatus === formattedStatus) {
+    console.log("Ticket already in the correct status");
+    return;
+  }
+
+  const statusIndex = WORK_ITEM_STATUS_ORDER.indexOf(formattedStatus);
+  const currentStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(currentStatus);
+  if (statusIndex < currentStatusIndex) {
+    console.error("Cannot change to a previous status");
+    return;
+  }
+  for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
+    const nextStatus = WORK_ITEM_STATUS_ORDER[i];
+    if (nextStatus) {
+      await updateTicketStatus(itemId, nextStatus);
+    }
+  }
+  console.log(`Ticket ${itemId} status changed to ${formattedStatus}`);
+};
+
+const updateTicketStatus = async (itemId: string, status: string) => {
+  const payload = [{ op: "add", path: "/fields/System.State", value: status }];
+  const result = await patch(
+    `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${itemId}?api-version=5.1`,
+    payload
+  );
+  if (result.status !== 200) {
+    console.error(
+      `Error updating ticket ${itemId} status to ${status}: ${result.data?.message}`
+    );
+  }
+};
+
+const fetchTicket = async (id: string) => {
+  const ticketInfo = await get(
+    `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${id}?api-version=5.1&$expand=relations`
+  );
+  return ticketInfo.data;
+};
+
+const patch = async (url: string, payload: Object) => {
+  return await request("patch", url, payload);
+};
+
+const get = async (url: string) => {
+  return await request("get", url, null);
+};
+
+const request = async (method: string, url: string, payload: Object | null) => {
+  const token = btoa(`:${PAT_TOKEN}`);
+  const config = {
+    method: method,
+    maxBodyLength: Infinity,
+    url,
+    headers: {
+      "Content-Type":
+        method === "patch" ? "application/json-patch+json" : "application/json",
+      Authorization: `Basic ${token}`,
+    },
+    data: JSON.stringify(payload),
+  };
+
+  return await axios.request(config);
+};
+
+changeTicketStatus(WORK_ITEM_ID, WORK_ITEM_INTENDED_STATUS);
