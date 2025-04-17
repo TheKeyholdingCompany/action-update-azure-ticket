@@ -64,11 +64,11 @@ jobs:
 
       - name: Update ticket to "In Progress"
         if: github.event_name == 'push'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.0.1
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.0.9
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone
-          ticket-id: 1234
+          ticket-id: ${{ steps.commit_find_ticket.outputs.ticket }}
           status: In Progress
           status-order-list: New,In Progress,Code Review,Ready for QA,In QA,Ready for regression,Ready for Deploy,Done
 ```
