@@ -13,7 +13,8 @@ const changeTicketStatus = async (
   status: string | undefined
 ) => {
   if (!itemId) {
-    throw new Error("Item ID is required");
+    console.error("Item ID is required");
+    return;
   }
   const formattedStatus = WORK_ITEM_STATUS_ORDER.find(
     (s) => s.toUpperCase() === `${status}`.toUpperCase()
@@ -36,7 +37,7 @@ const changeTicketStatus = async (
   if (statusIndex < currentStatusIndex) {
     console.error("Cannot change to a previous status");
   }
-  
+
   for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
     const nextStatus = WORK_ITEM_STATUS_ORDER[i];
     if (nextStatus) {
