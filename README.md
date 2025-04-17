@@ -56,7 +56,11 @@ jobs:
         id: commit_find_ticket
         if: github.event_name == 'push'
         run: |
-          echo "${{ github.event.head_commit.message }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}'
+          branch_name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          ticket=$(echo "${{ github.event.head_commit.message }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}' | head -1)
+          if [ -z "${ticket}" ]; then ticket=$(echo "${branch_name}" | grep -o '[0-9]*-' | awk -F '-' '{print $1}'); fi
+          if [ -z "${ticket}" ]; then ticket=$(echo "${branch_name}" | grep -o '[0-9]*_' | awk -F '_' '{print $1}'); fi
+          echo "ticket=${ticket}" >> $GITHUB_OUTPUT
 
       - name: Update ticket to "In Progress"
         if: github.event_name == 'push'
