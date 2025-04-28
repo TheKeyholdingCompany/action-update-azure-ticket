@@ -3,8 +3,8 @@ import axios from "axios";
 
 const PAT_TOKEN = argv[2];
 const PROJECT = argv[3];
-const WORK_ITEM_ID = argv[4];
-const WORK_ITEM_INTENDED_STATUS = argv[5];
+const WORK_ITEM_IDS = argv[4] || "";
+const WORK_ITEM_INTENDED_STATUS = argv[5] || "";
 const WORK_ITEM_STATUS_ORDER =
   argv[6]?.split(",").map((e) => `${e}`.trim()) || [];
 
@@ -92,4 +92,7 @@ const request = async (method: string, url: string, payload: Object | null) => {
   return await axios.request(config);
 };
 
-changeTicketStatus(WORK_ITEM_ID, WORK_ITEM_INTENDED_STATUS);
+WORK_ITEM_IDS.split(",").forEach((itemId) => {
+  const _itemId = (itemId.includes("#") ? `${itemId.split("#")[1]}` : itemId).trim();
+  changeTicketStatus(_itemId, WORK_ITEM_INTENDED_STATUS);
+})

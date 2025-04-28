@@ -4,11 +4,11 @@
 
 ```yml
 - name: Update ticket to "status"
-  uses: TheKeyholdingCompany/action-update-azure-ticket@0.0.1
+  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.0
   with:
     pat: your-azure-pat-here
     project: your-project-name  # Project ID also works
-    ticket-id: your-ticket-id
+    ticket-id: your-ticket-id  # (e.g. "1234" or "AB#1234" or "AB#1234,AB#4321" or "1234,4321")
     status: your-status-here  # case insensitive, but must match an existing state
     status-order-list: comma-separated-list-of-statuses  # optional, but recommended
 ```
@@ -44,7 +44,7 @@ jobs:
 
       - name: Update ticket to "Code Review"
         if: github.event_name == 'pull_request'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.0.1
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.0
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone
@@ -64,7 +64,7 @@ jobs:
 
       - name: Update ticket to "In Progress"
         if: github.event_name == 'push'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.0.9
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.0
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone

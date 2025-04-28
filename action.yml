@@ -11,7 +11,7 @@ inputs:
     description: Project name or ID (if you have multiple projects, any would work if you have access to all of them)
     required: true
   ticket-id:
-    description: Ticket ID to update
+    description: Ticket IDs to update (e.g. "1234" or "AB#1234" or "AB#1234,AB#4321" or "1234,4321")
     required: true
   status:
     description: Status to set the ticket to
