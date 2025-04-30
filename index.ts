@@ -41,7 +41,14 @@ const changeTicketStatus = async (
   for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
     const nextStatus = WORK_ITEM_STATUS_ORDER[i];
     if (nextStatus) {
-      await updateTicketStatus(itemId, nextStatus);
+      try {
+        await updateTicketStatus(itemId, nextStatus);
+      } catch (error) {
+        console.error(
+          `Error updating ticket ${itemId} status to ${nextStatus}: ${error}`
+        );
+        return;
+      }
     }
   }
   console.log(`Ticket ${itemId} status changed to ${formattedStatus}`);
