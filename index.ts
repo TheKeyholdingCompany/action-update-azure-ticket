@@ -69,10 +69,15 @@ const updateTicketStatus = async (itemId: string, status: string) => {
 };
 
 const fetchTicket = async (id: string) => {
-  const ticketInfo = await get(
+  const result = await get(
     `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${id}?api-version=5.1&$expand=relations`
   );
-  return ticketInfo.data;
+  if (result.status !== 200) {
+    throw new Error(
+      `Error fetching ticket ${id}: ${result.data?.message}`
+    );
+  }
+  return result.data;
 };
 
 const patch = async (url: string, payload: Object) => {
@@ -106,5 +111,7 @@ const request = async (method: string, url: string, payload: Object | null) => {
 
 WORK_ITEM_IDS.split(",").forEach((itemId) => {
   const _itemId = (itemId.includes("#") ? `${itemId.split("#")[1]}` : itemId).trim();
-  changeTicketStatus(_itemId, WORK_ITEM_INTENDED_STATUS);
+  changeTicketStatus(_itemId, WORK_ITEM_INTENDED_STATUS).catch((error) => {
+    console.error(`Error processing ticket ${_itemId}: ${error}`);
+  });
 })
