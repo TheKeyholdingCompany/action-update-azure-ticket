@@ -1,6 +1,4 @@
 import { argv } from "node:process";
-import axios from "axios";
-const https = require("https");
 
 const PAT_TOKEN = argv[2];
 const PROJECT = argv[3];
@@ -37,6 +35,7 @@ const changeTicketStatus = async (
   const currentStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(currentStatus);
   if (statusIndex < currentStatusIndex) {
     console.error("Cannot change to a previous status");
+    return;
   }
 
   for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
@@ -61,9 +60,10 @@ const updateTicketStatus = async (itemId: string, status: string) => {
     `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${itemId}?api-version=5.1`,
     payload
   );
+  const data : any = await result.json();
   if (result.status !== 200) {
     throw new Error(
-      `Error updating ticket ${itemId} status to ${status}: ${result.data?.message}`
+      `Error updating ticket ${itemId} status to ${status}: ${data}`
     );
   }
 };
@@ -72,12 +72,13 @@ const fetchTicket = async (id: string) => {
   const result = await get(
     `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${id}?api-version=5.1&$expand=relations`
   );
+  const data : any = await result.json();
   if (result.status !== 200) {
     throw new Error(
-      `Error fetching ticket ${id}: ${result.data?.message}`
+      `Error fetching ticket ${id}: ${data}`
     );
   }
-  return result.data;
+  return data
 };
 
 const patch = async (url: string, payload: Object) => {
@@ -90,23 +91,19 @@ const get = async (url: string) => {
 
 const request = async (method: string, url: string, payload: Object | null) => {
   const token = btoa(`:${PAT_TOKEN}`);
-  const config = {
-    method: method,
-    maxBodyLength: Infinity,
-    url,
+  const config: any = {
+    method: method.toUpperCase(),
     headers: {
       "Content-Type":
         method === "patch" ? "application/json-patch+json" : "application/json",
       Authorization: `Basic ${token}`,
-    },
-    data: JSON.stringify(payload),
-    httpsAgent: new https.Agent({
-      maxVersion: "TLSv1.2",
-      minVersion: "TLSv1.2"
-    })
+    }
   };
+  if (method !== "get" && payload) {
+    config["body"] = JSON.stringify(payload)
+  }
 
-  return await axios.request(config);
+  return await fetch(url, config);
 };
 
 WORK_ITEM_IDS.split(",").forEach((itemId) => {
