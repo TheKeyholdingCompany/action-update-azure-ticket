@@ -1,5 +1,6 @@
 import { argv } from "node:process";
 import axios from "axios";
+const https = require("https");
 
 const PAT_TOKEN = argv[2];
 const PROJECT = argv[3];
@@ -94,6 +95,10 @@ const request = async (method: string, url: string, payload: Object | null) => {
       Authorization: `Basic ${token}`,
     },
     data: JSON.stringify(payload),
+    httpsAgent: new https.Agent({
+      maxVersion: "TLSv1.2",
+      minVersion: "TLSv1.2"
+    })
   };
 
   return await axios.request(config);
