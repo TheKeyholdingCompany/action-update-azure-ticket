@@ -44,9 +44,7 @@ const changeTicketStatus = async (
       try {
         await updateTicketStatus(itemId, nextStatus);
       } catch (error) {
-        console.error(
-          `Error updating ticket ${itemId} status to ${nextStatus}: ${error}`
-        );
+        console.error(error);
         return;
       }
     }
@@ -63,7 +61,7 @@ const updateTicketStatus = async (itemId: string, status: string) => {
   const data : any = await result.json();
   if (result.status !== 200) {
     throw new Error(
-      `Error updating ticket ${itemId} status to ${status}: ${data}`
+      `Error updating ticket ${itemId} status to ${status}: ${JSON.stringify(data)}`
     );
   }
 };
@@ -75,7 +73,7 @@ const fetchTicket = async (id: string) => {
   const data : any = await result.json();
   if (result.status !== 200) {
     throw new Error(
-      `Error fetching ticket ${id}: ${data}`
+      `Error fetching ticket ${id}: ${JSON.stringify(data)}`
     );
   }
   return data
@@ -103,7 +101,13 @@ const request = async (method: string, url: string, payload: Object | null) => {
     config["body"] = JSON.stringify(payload)
   }
 
-  return await fetch(url, config);
+  try{
+    return await fetch(url, config);
+  } catch (error) {
+    console.error(`Error making request to ${url}: ${error}`);
+    console.log("Retrying...")
+    return await fetch(url, config);
+  }
 };
 
 WORK_ITEM_IDS.split(",").forEach((itemId) => {

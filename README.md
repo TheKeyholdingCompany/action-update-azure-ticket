@@ -4,7 +4,7 @@
 
 ```yml
 - name: Update ticket to "status"
-  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.4
+  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.6
   with:
     pat: your-azure-pat-here
     project: your-project-name  # Project ID also works
@@ -44,7 +44,7 @@ jobs:
 
       - name: Update ticket to "Code Review"
         if: github.event_name == 'pull_request'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.4
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.6
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone
@@ -64,7 +64,7 @@ jobs:
 
       - name: Update ticket to "In Progress"
         if: github.event_name == 'push'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.4
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.6
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone

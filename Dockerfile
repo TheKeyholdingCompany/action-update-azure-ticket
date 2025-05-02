@@ -1,8 +1,4 @@
-FROM oven/bun:latest AS base
-WORKDIR /app
-
-# copy production dependencies and source code into final image
-FROM base AS release
+FROM oven/bun:latest
 COPY package.json /app/
 COPY index.ts /app/
 
