@@ -43,7 +43,7 @@ jobs:
         id: pr_find_ticket
         if: github.event_name == 'pull_request'
         run: |
-          ticket=$(echo "${{ github.event.pull_request.body }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}' | head -1)
+          ticket=$(echo "${{ github.event.pull_request.body }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}')
           ticket_list=$(echo "${ticket}" | tr ',' ' ')
           echo "tickets=${ticket_list}" >> $GITHUB_OUTPUT
 
@@ -62,7 +62,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           branch_name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
-          ticket=$(echo "${{ github.event.head_commit.message }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}' | head -1)
+          ticket=$(echo "${{ github.event.head_commit.message }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}')
           if [ -z "${ticket}" ]; then ticket=$(echo "${branch_name}" | grep -o '[0-9]*-' | awk -F '-' '{print $1}'); fi
           if [ -z "${ticket}" ]; then ticket=$(echo "${branch_name}" | grep -o '[0-9]*_' | awk -F '_' '{print $1}'); fi
           ticket_list=$(echo "${ticket}" | tr ',' ' ')
