@@ -6,6 +6,7 @@ const WORK_ITEM_IDS = argv[4] || "";
 const WORK_ITEM_INTENDED_STATUS = argv[5] || "";
 const WORK_ITEM_STATUS_ORDER =
   argv[6]?.split(",").map((e) => `${e}`.trim()) || [];
+const ALLOW_STATUS_BACKFLOW = argv[7]?.toLocaleLowerCase() === "true";
 
 const changeTicketStatus = async (
   itemId: string | undefined,
@@ -31,15 +32,31 @@ const changeTicketStatus = async (
     return;
   }
 
-  const statusIndex = WORK_ITEM_STATUS_ORDER.indexOf(formattedStatus);
+  const targetStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(formattedStatus);
   const currentStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(currentStatus);
-  if (statusIndex < currentStatusIndex) {
+  if (targetStatusIndex < currentStatusIndex && !ALLOW_STATUS_BACKFLOW) {
     console.error("Cannot change to a previous status");
     return;
   }
+  const statusList =
+    targetStatusIndex < currentStatusIndex && ALLOW_STATUS_BACKFLOW
+      ? WORK_ITEM_STATUS_ORDER.toReversed()
+      : WORK_ITEM_STATUS_ORDER;
 
-  for (let i = currentStatusIndex + 1; i <= statusIndex; i++) {
-    const nextStatus = WORK_ITEM_STATUS_ORDER[i];
+  await stepThroughStatuses(currentStatus, formattedStatus, itemId, statusList);
+  console.log(`Ticket ${itemId} status changed to ${formattedStatus}`);
+};
+
+const stepThroughStatuses = async (
+  currentStatus: string,
+  targetStatus: string,
+  itemId: string,
+  statusList: string[]
+) => {
+  const targetStatusIndex = statusList.indexOf(targetStatus);
+  const currentStatusIndex = statusList.indexOf(currentStatus);
+  for (let i = currentStatusIndex + 1; i <= targetStatusIndex; i++) {
+    const nextStatus = statusList[i];
     if (nextStatus) {
       try {
         await updateTicketStatus(itemId, nextStatus);
@@ -49,7 +66,6 @@ const changeTicketStatus = async (
       }
     }
   }
-  console.log(`Ticket ${itemId} status changed to ${formattedStatus}`);
 };
 
 const updateTicketStatus = async (itemId: string, status: string) => {
@@ -58,10 +74,12 @@ const updateTicketStatus = async (itemId: string, status: string) => {
     `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${itemId}?api-version=5.1`,
     payload
   );
-  const data : any = await result.json();
+  const data: any = await result.json();
   if (result.status !== 200) {
     throw new Error(
-      `Error updating ticket ${itemId} status to ${status}: ${JSON.stringify(data)}`
+      `Error updating ticket ${itemId} status to ${status}: ${JSON.stringify(
+        data
+      )}`
     );
   }
 };
@@ -70,13 +88,11 @@ const fetchTicket = async (id: string) => {
   const result = await get(
     `https://dev.azure.com/thekeyholdingcompany/${PROJECT}/_apis/wit/workitems/${id}?api-version=5.1&$expand=relations`
   );
-  const data : any = await result.json();
+  const data: any = await result.json();
   if (result.status !== 200) {
-    throw new Error(
-      `Error fetching ticket ${id}: ${JSON.stringify(data)}`
-    );
+    throw new Error(`Error fetching ticket ${id}: ${JSON.stringify(data)}`);
   }
-  return data
+  return data;
 };
 
 const patch = async (url: string, payload: Object) => {
@@ -95,24 +111,26 @@ const request = async (method: string, url: string, payload: Object | null) => {
       "Content-Type":
         method === "patch" ? "application/json-patch+json" : "application/json",
       Authorization: `Basic ${token}`,
-    }
+    },
   };
   if (method !== "get" && payload) {
-    config["body"] = JSON.stringify(payload)
+    config["body"] = JSON.stringify(payload);
   }
 
-  try{
+  try {
     return await fetch(url, config);
   } catch (error) {
     console.error(`Error making request to ${url}: ${error}`);
-    console.log("Retrying...")
+    console.log("Retrying...");
     return await fetch(url, config);
   }
 };
 
 WORK_ITEM_IDS.split(",").forEach((itemId) => {
-  const _itemId = (itemId.includes("#") ? `${itemId.split("#")[1]}` : itemId).trim();
+  const _itemId = (
+    itemId.includes("#") ? `${itemId.split("#")[1]}` : itemId
+  ).trim();
   changeTicketStatus(_itemId, WORK_ITEM_INTENDED_STATUS).catch((error) => {
     console.error(`Error processing ticket ${_itemId}: ${error}`);
   });
-})
+});

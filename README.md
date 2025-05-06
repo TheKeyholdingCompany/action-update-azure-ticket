@@ -4,7 +4,7 @@
 
 ```yml
 - name: Update ticket to "status"
-  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.6
+  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.7
   with:
     pat: your-azure-pat-here
     project: your-project-name  # Project ID also works
@@ -22,6 +22,9 @@ This is recommended in case you have rules that restrict the which statuses can 
 name: Move ticket development status
 on:
   pull_request:
+    types:
+      - review_requested
+      - ready_for_review
     branches:
       - main
   push:
@@ -40,15 +43,17 @@ jobs:
         id: pr_find_ticket
         if: github.event_name == 'pull_request'
         run: |
-          echo "${{ github.event.pull_request.body }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}'
+          ticket=$(echo "${{ github.event.pull_request.body }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}' | head -1)
+          ticket_list=$(echo "${ticket}" | tr ',' ' ')
+          echo "tickets=${ticket_list}" >> $GITHUB_OUTPUT
 
       - name: Update ticket to "Code Review"
         if: github.event_name == 'pull_request'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.6
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.7
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone
-          ticket-id: 1234
+          ticket-id: ${{ steps.pr_find_ticket.outputs.tickets }}
           status: Code Review
           status-order-list: New,In Progress,Code Review,Ready for QA,In QA,Ready for regression,Ready for Deploy,Done
 
@@ -60,15 +65,16 @@ jobs:
           ticket=$(echo "${{ github.event.head_commit.message }}" | grep -o 'AB#[0-9]*' | awk -F 'AB#' '{print $2}' | head -1)
           if [ -z "${ticket}" ]; then ticket=$(echo "${branch_name}" | grep -o '[0-9]*-' | awk -F '-' '{print $1}'); fi
           if [ -z "${ticket}" ]; then ticket=$(echo "${branch_name}" | grep -o '[0-9]*_' | awk -F '_' '{print $1}'); fi
-          echo "ticket=${ticket}" >> $GITHUB_OUTPUT
+          ticket_list=$(echo "${ticket}" | tr ',' ' ')
+          echo "tickets=${ticket_list}" >> $GITHUB_OUTPUT
 
       - name: Update ticket to "In Progress"
         if: github.event_name == 'push'
-        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.6
+        uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.7
         with:
           pat: ${{ secrets.AZURE_PAT }}
           project: Keystone
-          ticket-id: ${{ steps.commit_find_ticket.outputs.ticket }}
+          ticket-id: ${{ steps.commit_find_ticket.outputs.tickets }}
           status: In Progress
           status-order-list: New,In Progress,Code Review,Ready for QA,In QA,Ready for regression,Ready for Deploy,Done
 ```
