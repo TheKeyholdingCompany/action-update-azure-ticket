@@ -4,9 +4,9 @@ const PAT_TOKEN = argv[2];
 const PROJECT = argv[3];
 const WORK_ITEM_IDS = argv[4] || "";
 const WORK_ITEM_INTENDED_STATUS = argv[5] || "";
-const WORK_ITEM_STATUS_ORDER =
-  argv[6]?.split(",").map((e) => `${e}`.trim()) || [];
-const ALLOW_STATUS_BACKFLOW = argv[7]?.toLocaleLowerCase() === "true";
+const WORK_ITEM_STATUS_ORDER = argv[6]?.split(",").map((e) => `${e}`.trim()) || [];
+const CODE_REVIEW_STATE_NAME = `${argv[7]}`.trim();
+const ALLOW_STATUS_BACKFLOW = argv[8]?.toLocaleLowerCase() === "true";
 
 const changeTicketStatus = async (
   itemId: string | undefined,
@@ -34,10 +34,19 @@ const changeTicketStatus = async (
 
   const targetStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(formattedStatus);
   const currentStatusIndex = WORK_ITEM_STATUS_ORDER.indexOf(currentStatus);
-  if (targetStatusIndex < currentStatusIndex && !ALLOW_STATUS_BACKFLOW) {
+  const isFlowingBackwards = targetStatusIndex < currentStatusIndex;
+  if (isFlowingBackwards && !ALLOW_STATUS_BACKFLOW) {
     console.error("Cannot change to a previous status");
     return;
   }
+
+  const githubPRs = ticketInfo.relations.filter((r:any) => r.rel === "ArtifactLink" && r.attributes["name"] === "GitHub Pull Request");
+  // By the time this runs, this PR shoudl already be linked to the ticket. So we should only halt if there is more than one PR linked.
+  if (githubPRs.length > 1 && !isFlowingBackwards && targetStatusIndex > WORK_ITEM_STATUS_ORDER.indexOf(CODE_REVIEW_STATE_NAME) ) {
+    console.error(`Ticket ${itemId} has multiple GitHub PRs linked, cannot automatically change status to ${formattedStatus}`);
+    return;
+  }
+
   const statusList =
     targetStatusIndex < currentStatusIndex && ALLOW_STATUS_BACKFLOW
       ? WORK_ITEM_STATUS_ORDER.toReversed()

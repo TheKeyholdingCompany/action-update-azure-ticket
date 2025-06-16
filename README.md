@@ -4,13 +4,15 @@
 
 ```yml
 - name: Update ticket to "status"
-  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.7
+  uses: TheKeyholdingCompany/action-update-azure-ticket@0.1.8
   with:
     pat: your-azure-pat-here
     project: your-project-name  # Project ID also works
     ticket-id: your-ticket-id  # (e.g. "1234" or "AB#1234" or "AB#1234,AB#4321" or "1234,4321")
     status: your-status-here  # case insensitive, but must match an existing state
     status-order-list: comma-separated-list-of-statuses  # optional, but recommended
+    code-review-state: Your Code Review State  # optional, default is "Code Review"
+    allow-backflow: true  # allow changing to previous statuses, optional, default is false
 ```
 
 The default value for `status-order-list` is `"New,In Progress,Code Review,Ready for QA,In QA,Ready for regression,Ready for Deploy,Done"`.

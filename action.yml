@@ -20,6 +20,10 @@ inputs:
     description: Ordered list of status (in case the ticket needs to be moved to an intermediate status before moving to the final status)
     required: false
     default: New,In Progress,Code Review,Ready for QA,In QA,Ready for regression,Ready for Deploy,Done
+  code-review-state:
+    description: Name of the code review state
+    required: false
+    default: Code Review
   allow-back-flow:
     description: Allow changes to previous statuses (e.g. "Code Review" to "In Progress")
     required: false
@@ -34,4 +38,5 @@ runs:
     - ${{ inputs.ticket-id}}
     - ${{ inputs.status }}
     - ${{ inputs.status-order-list }}
+    - ${{ inputs.code-review-state }}
     - ${{ inputs.allow-back-flow }}
